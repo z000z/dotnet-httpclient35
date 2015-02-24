@@ -1,0 +1,3 @@
+[submodule "Rackspace.Threading"]
+	path = Rackspace.Threading
+	url = git@github.com:couchbasedeps/dotnet-threading.git
