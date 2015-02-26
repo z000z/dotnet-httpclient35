@@ -12,7 +12,6 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">.\</SolutionDir>
-    <ReleaseVersion>1.0.4</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -125,7 +124,7 @@
       <Project>{52CA4A3B-F296-4489-B5F0-AD375D039B35}</Project>
       <Name>Rackspace.Threading.net35-client</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\System.Threading.Tasks.Net35\System.Threading.Tasks.Net35.csproj">
+    <ProjectReference Include="..\Rackspace.Threading\System.Threading.Tasks.Net35\System.Threading.Tasks.Net35.csproj">
       <Project>{DCB5D745-525C-46A1-BFC0-E12F87AB6165}</Project>
       <Name>System.Threading.Tasks.Net35</Name>
     </ProjectReference>
