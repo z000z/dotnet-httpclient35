@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">.\</SolutionDir>
+    <ReleaseVersion>1.0.4</ReleaseVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,9 +38,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Threading.Tasks.NET35">
-      <HintPath>..\Rackspace.Threading\System.Threading.Tasks.NET35.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\build\common\Consts.cs" />
@@ -102,7 +100,6 @@
     <Compile Include="System.Net\TransportContext.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
     <Folder Include="System.Net\" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +124,10 @@
     <ProjectReference Include="..\Rackspace.Threading\Rackspace.Threading\Rackspace.Threading.net35-client.csproj">
       <Project>{52CA4A3B-F296-4489-B5F0-AD375D039B35}</Project>
       <Name>Rackspace.Threading.net35-client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\System.Threading.Tasks.Net35\System.Threading.Tasks.Net35.csproj">
+      <Project>{DCB5D745-525C-46A1-BFC0-E12F87AB6165}</Project>
+      <Name>System.Threading.Tasks.Net35</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
