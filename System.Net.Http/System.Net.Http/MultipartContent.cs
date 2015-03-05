@@ -32,6 +32,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Net.Http.Headers;
+using System.Net.Couchbase;
 using System.Linq;
 using System.Text;
 using Rackspace.Threading;
@@ -123,7 +124,7 @@ namespace System.Net.Http
 			base.Dispose (disposing);
 		}
 
-		protected internal override Task SerializeToStreamAsync (Stream stream, TransportContext context)
+        protected internal override Task SerializeToStreamAsync(Stream stream, System.Net.Couchbase.TransportContext context)
 		{
 			// RFC 2046
 			//

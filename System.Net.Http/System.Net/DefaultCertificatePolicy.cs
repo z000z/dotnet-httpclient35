@@ -1,12 +1,12 @@
-﻿//
-// ChannelBindingKind.cs 
+//
+// System.Net.DefaultCertificatePolicy: Default policy applicable to 
 //
 // Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+//	Sebastien Pouliot  <sebastien@ximian.com>
+//
+// Copyright (C) 2004 Novell (http://www.novell.com)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +28,29 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
-{
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+using System.Security.Cryptography.X509Certificates;
+
+namespace System.Net.Couchbase {
+	
+	internal class DefaultCertificatePolicy : ICertificatePolicy {
+		
+		// This is the same default policy as used by the .NET 
+		// framework. It accepts valid certificates and (valid
+		// but) expired certificates.
+		public bool CheckValidationResult (ServicePoint point, X509Certificate certificate, WebRequest request, int certificateProblem)
+		{
+			#if SECURITY_DEP
+			// If using default policy and the new callback is there, ignore this
+			if (ServicePointManager.ServerCertificateValidationCallback != null)
+				return true;
+			#endif
+			switch (certificateProblem) {
+			case 0:			// No error
+			case -2146762495:	// CERT_E_EXPIRED 0x800B0101 (WinError.h)
+				return true;
+			default:
+				return false;
+			}
+		}
+	}
 }

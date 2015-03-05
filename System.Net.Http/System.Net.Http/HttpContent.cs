@@ -87,7 +87,7 @@ namespace System.Net.Http
 			return CopyToAsync (stream, null);
 		}
 
-		public Task CopyToAsync (Stream stream, TransportContext context)
+        public Task CopyToAsync(Stream stream, System.Net.Couchbase.TransportContext context)
 		{
 			if (stream == null)
 				throw new ArgumentNullException ("stream");
@@ -207,7 +207,7 @@ namespace System.Net.Http
 			return value.Length;
 		}
 
-		protected internal abstract Task SerializeToStreamAsync (Stream stream, TransportContext context);
+        protected internal abstract Task SerializeToStreamAsync(Stream stream, System.Net.Couchbase.TransportContext context);
 		protected internal abstract bool TryComputeLength (out long length);
 	}
 }

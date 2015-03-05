@@ -1,12 +1,12 @@
-﻿//
-// ChannelBindingKind.cs 
 //
-// Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+// System.Net.IAuthenticationModule.cs
+//
+// Author:
+//   Miguel de Icaza (miguel@ximian.com)
+//
+// (C) Ximian, Inc.  http://www.ximian.com
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +28,15 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
-{
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+namespace System.Net.Couchbase {
+	
+	// <remarks>
+	//   Authentication interface for Web client authentication modules.
+	// </remarks>
+	public interface IAuthenticationModule {
+		Authorization Authenticate (string challenge, WebRequest request, ICredentials credentials);
+		Authorization PreAuthenticate (WebRequest request, ICredentials credentials);
+		string AuthenticationType { get; }
+		bool CanPreAuthenticate { get; }
+	}
 }

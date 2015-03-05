@@ -1,12 +1,12 @@
-﻿//
-// ChannelBindingKind.cs 
+//
+// System.Net.WebConnectionData
 //
 // Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+//	Gonzalo Paniagua Javier (gonzalo@ximian.com)
+//
+// (C) 2003 Ximian, Inc (http://www.ximian.com)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +28,52 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+using System.IO;
+
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	class WebConnectionData
+	{
+		HttpWebRequest _request;
+		public int StatusCode;
+		public string StatusDescription;
+		public WebHeaderCollection Headers;
+		public Version Version;
+		public Version ProxyVersion;
+		public Stream stream;
+		public string[] Challenge;
+		ReadState _readState;
+		
+		public WebConnectionData ()
+		{
+			_readState = ReadState.None;
+		}
+		
+		public WebConnectionData (HttpWebRequest request)
+		{
+			this._request = request;
+		}
+		
+		public HttpWebRequest request {
+			get {
+				return _request;
+			}
+			set {
+				_request = value;
+			}
+		}
+		
+		public ReadState ReadState {
+			get {
+				return _readState;
+			}
+			set {
+				lock (this) {
+					if ((_readState == ReadState.Aborted) && (value != ReadState.Aborted))
+						throw new WebException ("Aborted", WebExceptionStatus.RequestCanceled);
+					_readState = value;
+				}
+			}
+		}
+	}
 }

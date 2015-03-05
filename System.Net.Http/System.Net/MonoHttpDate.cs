@@ -1,12 +1,10 @@
-﻿//
-// ChannelBindingKind.cs 
 //
-// Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+// System.Net.MonoHttpDate
+//
+// Author:
+//   Lawrence Pit (loz@cable.a2000.nl)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +26,28 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+using System;
+using System.Globalization;
+
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	/// <summary>
+	/// See RFC 2068 3.3.1
+	/// </summary>
+	internal class MonoHttpDate
+	{
+		private static readonly string rfc1123_date = "r";
+		private static readonly string rfc850_date = "dddd, dd-MMM-yy HH:mm:ss G\\MT";
+		private static readonly string asctime_date = "ddd MMM d HH:mm:ss yyyy";
+		private static readonly string [] formats = 
+		new string [] {rfc1123_date, rfc850_date, asctime_date};
+		
+		internal static DateTime Parse (string dateStr)
+		{			
+			return DateTime.ParseExact (dateStr, 
+			                            formats, 
+			                            CultureInfo.InvariantCulture, 
+			                            DateTimeStyles.AllowWhiteSpaces).ToLocalTime ();
+		}
+	}
 }

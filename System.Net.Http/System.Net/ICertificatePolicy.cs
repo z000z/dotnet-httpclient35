@@ -1,12 +1,10 @@
-﻿//
-// ChannelBindingKind.cs 
 //
-// Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+// System.Net.ICertificatePolicy.cs
+//
+// Author:
+//   Lawrence Pit (loz@cable.a2000.nl)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +26,16 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
-{
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+using System.Security.Cryptography.X509Certificates;
+
+namespace System.Net.Couchbase {
+	
+	public interface ICertificatePolicy {
+		bool CheckValidationResult (
+			ServicePoint srvPoint,
+			X509Certificate certificate,
+			WebRequest request,
+			int certificateProblem
+			);		
+	}
 }

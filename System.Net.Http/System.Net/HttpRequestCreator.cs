@@ -1,12 +1,12 @@
-﻿//
-// ChannelBindingKind.cs 
+//
+// System.Net.HttpWebRequestCreator
 //
 // Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+//	Gonzalo Paniagua Javier (gonzalo@ximian.com)
+//
+// (C) 2003 Ximian, Inc (http://www.ximian.com)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +28,17 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	class HttpRequestCreator : IWebRequestCreate
+	{
+		internal HttpRequestCreator ()
+		{
+		}
+		
+		public WebRequest Create (Uri uri)
+		{
+			return new HttpWebRequest (uri);
+		}
+	}
 }

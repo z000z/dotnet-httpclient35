@@ -1,12 +1,14 @@
-﻿//
-// ChannelBindingKind.cs 
+//
+// System.Net.NtlmClient
 //
 // Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+//	Sebastien Pouliot (spouliot@motus.com)
+//	Gonzalo Paniagua Javier (gonzalo@ximian.com)
+//
+// (C) 2003 Motus Technologies. All rights reserved.
+// (c) 2003 Novell, Inc. (http://www.novell.com)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +30,39 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+using System;
+using System.Reflection;
+
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	class NtlmClient : IAuthenticationModule
+	{
+		IAuthenticationModule authObject;
+		
+		public NtlmClient ()
+		{
+			authObject = null;
+		}
+		
+		public Authorization Authenticate (string challenge, WebRequest webRequest, ICredentials credentials) 
+		{
+			if (authObject == null)
+				return null;
+			
+			return authObject.Authenticate (challenge, webRequest, credentials);
+		}
+		
+		public Authorization PreAuthenticate (WebRequest webRequest, ICredentials credentials) 
+		{
+			return null;
+		}
+		
+		public string AuthenticationType { 
+			get { return "NTLM"; }
+		}
+		
+		public bool CanPreAuthenticate { 
+			get { return false; }
+		}
+	}
 }

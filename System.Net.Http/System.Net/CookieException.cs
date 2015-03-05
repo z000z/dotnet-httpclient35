@@ -1,12 +1,10 @@
-﻿//
-// ChannelBindingKind.cs 
 //
-// Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+// System.Net.CookieException.cs
+//
+// Author:
+//   Lawrence Pit (loz@cable.a2000.nl)
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +26,42 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+using System.Globalization;
+using System.Runtime.Serialization;
+
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	[Serializable]
+	public class CookieException : FormatException, ISerializable
+	{
+		
+		// Constructors
+		public CookieException () : base ()
+		{
+		}
+		
+		internal CookieException (string msg) : base (msg) 
+		{
+		}
+		
+		internal CookieException (string msg, Exception e) : base (msg, e)
+		{
+		}
+		
+		protected CookieException (SerializationInfo serializationInfo, StreamingContext streamingContext)
+			: base (serializationInfo, streamingContext)
+		{			
+		}
+		
+		// Methods
+		void ISerializable.GetObjectData (SerializationInfo info, StreamingContext context)
+		{
+			base.GetObjectData (info, context);
+		}
+		
+		public override void GetObjectData (SerializationInfo serializationInfo, StreamingContext streamingContext)
+		{
+			base.GetObjectData (serializationInfo, streamingContext);
+		}
+	}
 }

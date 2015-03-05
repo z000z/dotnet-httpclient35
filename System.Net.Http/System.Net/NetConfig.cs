@@ -1,12 +1,10 @@
-﻿//
-// ChannelBindingKind.cs 
+// System.Net.NetConfig.cs
 //
 // Authors:
-//      Atsushi Enomoto  <atsushi@ximian.com>
+//    Jerome Laban (jlaban@wanadoo.fr)
+//
 //
 
-//
-// Copyright (C) 2010 Novell, Inc (http://novell.com)
 //
 // Permission is hereby granted, free of charge, to any person obtaining
 // a copy of this software and associated documentation files (the
@@ -28,12 +26,22 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //
 
-namespace System.Security.Authentication.ExtendedProtection.Couchbase
+using System;
+
+namespace System.Net.Couchbase
 {
-    public enum ChannelBindingKind
-    {
-        Unknown,
-        Unique,
-        Endpoint
-    }
+	class NetConfig : ICloneable
+	{
+		internal bool ipv6Enabled = false;
+		internal int MaxResponseHeadersLength = 64;
+		
+		internal NetConfig()
+		{
+		}
+		
+		object ICloneable.Clone()
+		{
+			return MemberwiseClone();
+		}
+	}
 }
