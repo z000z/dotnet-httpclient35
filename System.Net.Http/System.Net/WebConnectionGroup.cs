@@ -56,12 +56,17 @@ namespace System.Net.Couchbase
 			queue = new Queue ();
 		}
 		
-		public event EventHandler ConnectionClosed;
+		public event EventHandler ConnectionClosed
+        {
+            add { _connectionClosed = (EventHandler)Delegate.Combine(_connectionClosed, value); }
+            remove { _connectionClosed = (EventHandler)Delegate.Remove(_connectionClosed, value); }
+        }
+        private EventHandler _connectionClosed;
 		
 		void OnConnectionClosed ()
 		{
-			if (ConnectionClosed != null)
-				ConnectionClosed (this, null);
+            if (_connectionClosed != null)
+                _connectionClosed (this, null);
 		}
 		
 		public void Close ()
