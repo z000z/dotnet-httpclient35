@@ -10,3 +10,4 @@ build/nuget/
 
 # Roslyn IntelliSense Cache
 *.sln.ide/
+*.userprefs

@@ -39,7 +39,10 @@ namespace System.Net.Http
 		static readonly TimeSpan TimeoutDefault = TimeSpan.FromSeconds (100);
 
 		Uri base_address;
-		CancellationTokenSource cts;
+        CancellationTokenSource cts {
+            get { return (CancellationTokenSource)_cts; }
+        }
+        object _cts;
 		bool disposed;
 		HttpRequestHeaders headers;
 		long buffer_size;
@@ -60,7 +63,7 @@ namespace System.Net.Http
 		{
 			buffer_size = int.MaxValue;
 			timeout = TimeoutDefault;
-			cts = new CancellationTokenSource ();
+			_cts = new CancellationTokenSource ();
 		}
 
 		public Uri BaseAddress {
@@ -106,8 +109,8 @@ namespace System.Net.Http
 		{
 			// Cancel only any already running requests not any new request after this cancellation
 			// NOTE: can't call dispose due to a bug in the .NET 3.5 implementation of CancellationTokenRegistration.Dispose
-			var c = Interlocked.Exchange (ref cts, new CancellationTokenSource ());
-			c.Cancel ();
+			var c = Interlocked.Exchange (ref _cts, new CancellationTokenSource ());
+            ((CancellationTokenSource)c).Cancel ();
 		}
 
 		protected override void Dispose (bool disposing)
@@ -266,7 +269,7 @@ namespace System.Net.Http
 		Task<HttpResponseMessage> SendAsyncWorker (HttpRequestMessage request, HttpCompletionOption completionOption, CancellationToken cancellationToken)
 		{
 			var currentSource = this.cts;
-			Func<Task<CancellationTokenSource>> acquireResource = () => CompletedTask.FromResult (CancellationTokenSource.CreateLinkedTokenSource (currentSource.Token, cancellationToken));
+			Func<Task<CancellationTokenSource>> acquireResource = () => Task.FromResult (CancellationTokenSource.CreateLinkedTokenSource (currentSource.Token, cancellationToken));
 			Func<Task<CancellationTokenSource>, Task<HttpResponseMessage>> body =
 				resourceTask =>
 				{
@@ -291,7 +294,7 @@ namespace System.Net.Http
 									.Select (_ => response);
 							}
 					
-							return CompletedTask.FromResult (response);
+							return Task.FromResult (response);
 						})
 						.Finally (_ => GC.KeepAlive(currentSource));
 				};

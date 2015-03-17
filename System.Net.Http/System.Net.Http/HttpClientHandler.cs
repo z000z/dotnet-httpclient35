@@ -51,7 +51,12 @@ namespace System.Net.Http
 		bool useProxy;
 		ClientCertificateOption certificate;
 		int sentRequest;
-        System.Net.Couchbase.HttpWebRequest wrequest;
+        System.Net.Couchbase.HttpWebRequest wrequest
+        {
+            get { return (System.Net.Couchbase.HttpWebRequest)_wrequest; }
+        }
+        private object _wrequest;
+
 		string connectionGroupName;
 		int disposed;
 
@@ -225,7 +230,7 @@ namespace System.Net.Http
 			if (disposing) {
 				if (wrequest != null) {
 					wrequest.ServicePoint.CloseConnectionGroup (wrequest.ConnectionGroupName);
-					Interlocked.Exchange (ref wrequest, null);
+					Interlocked.Exchange (ref _wrequest, null);
 				}
 				Interlocked.Exchange (ref disposed, 1);
 			}
@@ -310,7 +315,7 @@ namespace System.Net.Http
 				throw new ObjectDisposedException (GetType ().ToString ());
 
 			Interlocked.Exchange(ref sentRequest, 1);
-			wrequest = CreateWebRequest (request);
+			_wrequest = CreateWebRequest (request);
 
 			Task intermediate;
 			if (request.Content != null) {
@@ -330,7 +335,7 @@ namespace System.Net.Http
 
             System.Net.Couchbase.HttpWebResponse wresponse = null;
 			Func<Task<IDisposable>> resource =
-				() => CompletedTask.FromResult<IDisposable> (cancellationToken.Register (l => ((HttpWebRequest) l).Abort (), wrequest));
+				() => Task.FromResult<IDisposable> (cancellationToken.Register (l => ((HttpWebRequest) l).Abort (), wrequest));
 			Func<Task<IDisposable>, Task> body =
 				_ => {
                     return wrequest.GetResponseAsync().Select(task => wresponse = (System.Net.Couchbase.HttpWebResponse)task.Result)
