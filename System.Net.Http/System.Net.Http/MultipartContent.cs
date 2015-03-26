@@ -70,7 +70,7 @@ namespace System.Net.Http
 			if (boundary.Length > 70)
 				throw new ArgumentOutOfRangeException ("boundary");
 
-			if (boundary.Last () == ' ' || !IsValidRFC2049 (boundary))
+            if (boundary[boundary.Length-1] == ' ' || !IsValidRFC2049 (boundary))
 				throw new ArgumentException ("boundary");
 
 			this.boundary = boundary;
