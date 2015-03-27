@@ -53,7 +53,6 @@ using System.Runtime.InteropServices;
 #else
 [assembly: AssemblyVersion (Consts.FxVersion)]
 [assembly: SatelliteContractVersion (Consts.FxVersion)]
-[assembly: AssemblyInformationalVersion (Consts.FxFileVersion + Consts.FxInformationalSuffix)]
 [assembly: AssemblyFileVersion (Consts.FxFileVersion)]
 #endif
 
