@@ -335,7 +335,7 @@ namespace System.Net.Http
 
             System.Net.Couchbase.HttpWebResponse wresponse = null;
 			Func<Task<IDisposable>> resource =
-				() => Task.FromResult<IDisposable> (cancellationToken.Register (l => ((HttpWebRequest) l).Abort (), wrequest));
+                () => Task.FromResult<IDisposable> (cancellationToken.Register (l => ((System.Net.Couchbase.HttpWebRequest) l).Abort (), wrequest));
 			Func<Task<IDisposable>, Task> body =
 				_ => {
                     return wrequest.GetResponseAsync().Select(task => wresponse = (System.Net.Couchbase.HttpWebResponse)task.Result)
