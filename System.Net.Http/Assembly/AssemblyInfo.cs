@@ -52,7 +52,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyFileVersion ("4.0.50524.0")]
 #else
 [assembly: AssemblyVersion (Consts.FxVersion)]
-[assembly: SatelliteContractVersion (Consts.FxVersion)]
+//[assembly: SatelliteContractVersion (Consts.FxVersion)]
 [assembly: AssemblyFileVersion (Consts.FxFileVersion)]
 #endif
 
