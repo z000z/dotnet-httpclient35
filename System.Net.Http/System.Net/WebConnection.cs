@@ -799,7 +799,7 @@ namespace System.Net.Couchbase
 			request.SetWriteStream (new WebConnectionStream (this, request));
 		}
 		
-		#if MONOTOUCH
+		#if true
 		static bool warned_about_queue = false;
 		#endif
 		
@@ -814,7 +814,7 @@ namespace System.Net.Couchbase
 					ThreadPool.QueueUserWorkItem (initConn, request);
 				} else {
 					lock (queue) {
-						#if MONOTOUCH
+						#if true
 						if (!warned_about_queue) {
 							warned_about_queue = true;
 							Console.WriteLine ("WARNING: An HttpWebRequest was added to the ConnectionGroup queue because the connection limit was reached.");

@@ -2,7 +2,7 @@
 // HttpClientHandler.cs
 //
 // Authors:
-//	Marek Safar  <marek.safar@gmail.com>
+//  Marek Safar  <marek.safar@gmail.com>
 //
 // Copyright (C) 2011 Xamarin Inc (http://www.xamarin.com)
 //
@@ -30,431 +30,326 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Specialized;
 using System.Net.Http.Headers;
-using Rackspace.Threading;
 
 namespace System.Net.Http
 {
-	public class HttpClientHandler : HttpMessageHandler
-	{
-		static long groupCounter;
+    public class HttpClientHandler : HttpMessageHandler
+    {
+        static long groupCounter;
 
-		bool allowAutoRedirect;
-		DecompressionMethods automaticDecompression;
+        bool allowAutoRedirect;
+        DecompressionMethods automaticDecompression;
         System.Net.Couchbase.CookieContainer cookieContainer;
-		ICredentials credentials;
-		int maxAutomaticRedirections;
-		long maxRequestContentBufferSize;
-		bool preAuthenticate;
-		IWebProxy proxy;
-		bool useCookies;
-		bool useDefaultCredentials;
-		bool useProxy;
-		ClientCertificateOption certificate;
-		int sentRequest;
-        System.Net.Couchbase.HttpWebRequest wrequest
+        ICredentials credentials;
+        int maxAutomaticRedirections;
+        long maxRequestContentBufferSize;
+        bool preAuthenticate;
+        IWebProxy proxy;
+        bool useCookies;
+        bool useDefaultCredentials;
+        bool useProxy;
+        ClientCertificateOption certificate;
+        bool sentRequest;
+        string connectionGroupName;
+        int disposed;
+
+        public HttpClientHandler ()
         {
-            get { return (System.Net.Couchbase.HttpWebRequest)_wrequest; }
+            allowAutoRedirect = true;
+            maxAutomaticRedirections = 50;
+            maxRequestContentBufferSize = int.MaxValue;
+            useCookies = true;
+            useProxy = true;
+            connectionGroupName = "HttpClientHandler" + Interlocked.Increment (ref groupCounter);
         }
-        private object _wrequest;
 
-		string connectionGroupName;
-		int disposed;
+        internal void EnsureModifiability ()
+        {
+            if (sentRequest)
+                throw new InvalidOperationException (
+                    "This instance has already started one or more requests. " +
+                    "Properties can only be modified before sending the first request.");
+        }
 
-		public HttpClientHandler ()
-		{
-			allowAutoRedirect = true;
-			maxAutomaticRedirections = 50;
-			maxRequestContentBufferSize = int.MaxValue;
-			useCookies = true;
-			useProxy = true;
-			connectionGroupName = "HttpClientHandler" + Interlocked.Increment (ref groupCounter);
-		}
+        public bool AllowAutoRedirect {
+            get {
+                return allowAutoRedirect;
+            }
+            set {
+                EnsureModifiability ();
+                allowAutoRedirect = value;
+            }
+        }
 
-		internal void EnsureModifiability ()
-		{
-			if (sentRequest != 0)
-				throw new InvalidOperationException (
-					"This instance has already started one or more requests. " +
-					"Properties can only be modified before sending the first request.");
-		}
+        public DecompressionMethods AutomaticDecompression {
+            get {
+                return automaticDecompression;
+            }
+            set {
+                EnsureModifiability ();
+                automaticDecompression = value;
+            }
+        }
 
-		public bool AllowAutoRedirect {
-			get {
-				return allowAutoRedirect;
-			}
-			set {
-				EnsureModifiability ();
-				allowAutoRedirect = value;
-			}
-		}
+        public ClientCertificateOption ClientCertificateOptions {
+            get {
+                return certificate;
+            }
+            set {
+                EnsureModifiability ();
+                certificate = value;
+            }
+        }
 
-		public DecompressionMethods AutomaticDecompression {
-			get {
-				return automaticDecompression;
-			}
-			set {
-				EnsureModifiability ();
-				automaticDecompression = value;
-			}
-		}
+        public System.Net.Couchbase.CookieContainer CookieContainer {
+            get {
+                return cookieContainer ?? (cookieContainer = new System.Net.Couchbase.CookieContainer ());
+            }
+            set {
+                EnsureModifiability ();
+                cookieContainer = value;
+            }
+        }
 
-		public ClientCertificateOption ClientCertificateOptions {
-			get {
-				return certificate;
-			}
-			set {
-				EnsureModifiability ();
-				certificate = value;
-			}
-		}
+        public ICredentials Credentials {
+            get {
+                return credentials;
+            }
+            set {
+                EnsureModifiability ();
+                credentials = value;
+            }
+        }
 
-		public System.Net.Couchbase.CookieContainer CookieContainer {
-			get {
-                return cookieContainer ?? (cookieContainer = new System.Net.Couchbase.CookieContainer());
-			}
-			set {
-				EnsureModifiability ();
-				cookieContainer = value;
-			}
-		}
+        public int MaxAutomaticRedirections {
+            get {
+                return maxAutomaticRedirections;
+            }
+            set {
+                EnsureModifiability ();
+                if (value <= 0)
+                    throw new ArgumentOutOfRangeException ();
 
-		public ICredentials Credentials {
-			get {
-				return credentials;
-			}
-			set {
-				EnsureModifiability ();
-				credentials = value;
-			}
-		}
+                maxAutomaticRedirections = value;
+            }
+        }
 
-		public int MaxAutomaticRedirections {
-			get {
-				return maxAutomaticRedirections;
-			}
-			set {
-				EnsureModifiability ();
-				if (value <= 0)
-					throw new ArgumentOutOfRangeException ();
+        public long MaxRequestContentBufferSize {
+            get {
+                return maxRequestContentBufferSize;
+            }
+            set {
+                EnsureModifiability ();
+                if (value < 0)
+                    throw new ArgumentOutOfRangeException ();
 
-				maxAutomaticRedirections = value;
-			}
-		}
+                maxRequestContentBufferSize = value;
+            }
+        }
 
-		public long MaxRequestContentBufferSize {
-			get {
-				return maxRequestContentBufferSize;
-			}
-			set {
-				EnsureModifiability ();
-				if (value < 0)
-					throw new ArgumentOutOfRangeException ();
+        public bool PreAuthenticate {
+            get {
+                return preAuthenticate;
+            }
+            set {
+                EnsureModifiability ();
+                preAuthenticate = value;
+            }
+        }
 
-				maxRequestContentBufferSize = value;
-			}
-		}
+        public IWebProxy Proxy {
+            get {
+                return proxy;
+            }
+            set {
+                EnsureModifiability ();
+                if (!UseProxy)
+                    throw new InvalidOperationException ();
 
-		public bool PreAuthenticate {
-			get {
-				return preAuthenticate;
-			}
-			set {
-				EnsureModifiability ();
-				preAuthenticate = value;
-			}
-		}
+                proxy = value;
+            }
+        }
 
-		public IWebProxy Proxy {
-			get {
-				return proxy;
-			}
-			set {
-				EnsureModifiability ();
-				if (!UseProxy)
-					throw new InvalidOperationException ();
+        public virtual bool SupportsAutomaticDecompression {
+            get {
+                return true;
+            }
+        }
 
-				proxy = value;
-			}
-		}
+        public virtual bool SupportsProxy {
+            get {
+                return true;
+            }
+        }
 
-		public virtual bool SupportsAutomaticDecompression {
-			get {
-				return true;
-			}
-		}
+        public virtual bool SupportsRedirectConfiguration {
+            get {
+                return true;
+            }
+        }
 
-		public virtual bool SupportsProxy {
-			get {
-				return true;
-			}
-		}
+        public bool UseCookies {
+            get {
+                return useCookies;
+            }
+            set {
+                EnsureModifiability ();
+                useCookies = value;
+            }
+        }
 
-		public virtual bool SupportsRedirectConfiguration {
-			get {
-				return true;
-			}
-		}
+        public bool UseDefaultCredentials {
+            get {
+                return useDefaultCredentials;
+            }
+            set {
+                EnsureModifiability ();
+                useDefaultCredentials = value;
+            }
+        }
 
-		public bool UseCookies {
-			get {
-				return useCookies;
-			}
-			set {
-				EnsureModifiability ();
-				useCookies = value;
-			}
-		}
+        public bool UseProxy {
+            get {
+                return useProxy;
+            }
+            set {
+                EnsureModifiability ();
+                useProxy = value;
+            }
+        }
 
-		public bool UseDefaultCredentials {
-			get {
-				return useDefaultCredentials;
-			}
-			set {
-				EnsureModifiability ();
-				useDefaultCredentials = value;
-			}
-		}
+        protected override void Dispose (bool disposing)
+        {
+            Thread.MemoryBarrier();
+            if (disposing && Interlocked.CompareExchange(ref disposed, 1, 0) == 0) {
+                System.Net.Couchbase.ServicePointManager.CloseConnectionGroup (connectionGroupName);
+            }
 
-		public bool UseProxy {
-			get {
-				return useProxy;
-			}
-			set {
-				EnsureModifiability ();
-				useProxy = value;
-			}
-		}
+            base.Dispose (disposing);
+        }
 
-		protected override void Dispose (bool disposing)
-		{
-			if (disposing) {
-				if (wrequest != null) {
-					wrequest.ServicePoint.CloseConnectionGroup (wrequest.ConnectionGroupName);
-					Interlocked.Exchange (ref _wrequest, null);
-				}
-				Interlocked.Exchange (ref disposed, 1);
-			}
+        internal virtual System.Net.Couchbase.HttpWebRequest CreateWebRequest (HttpRequestMessage request)
+        {
+            var wr = new System.Net.Couchbase.HttpWebRequest (request.RequestUri);
+            wr.ThrowOnError = false;
 
-			base.Dispose (disposing);
-		}
+            wr.ConnectionGroupName = connectionGroupName;
+            wr.Method = request.Method.Method;
+            wr.ProtocolVersion = request.Version;
 
-        internal virtual System.Net.Couchbase.HttpWebRequest CreateWebRequest(HttpRequestMessage request)
-		{
-            var wr = (System.Net.Couchbase.HttpWebRequest)System.Net.Couchbase.WebRequest.Create(request.RequestUri);
+            if (wr.ProtocolVersion == HttpVersion.Version10) {
+                wr.KeepAlive = request.Headers.ConnectionKeepAlive;
+            } else {
+                wr.KeepAlive = request.Headers.ConnectionClose != true;
+            }
 
-			wr.ConnectionGroupName = connectionGroupName;
-			wr.Method = request.Method.Method;
-			wr.ProtocolVersion = request.Version;
+            wr.ServicePoint.Expect100Continue = request.Headers.ExpectContinue == true;
 
-			if (wr.ProtocolVersion == HttpVersion.Version10) {
-				wr.KeepAlive = request.Headers.ConnectionKeepAlive;
-			} else {
-				wr.KeepAlive = request.Headers.ConnectionClose != true;
-			}
+            if (allowAutoRedirect) {
+                wr.AllowAutoRedirect = true;
+                wr.MaximumAutomaticRedirections = maxAutomaticRedirections;
+            } else {
+                wr.AllowAutoRedirect = false;
+            }
 
-			wr.ServicePoint.Expect100Continue = request.Headers.ExpectContinue == true;
+            wr.AutomaticDecompression = automaticDecompression;
+            wr.PreAuthenticate = preAuthenticate;
 
-			if (allowAutoRedirect) {
-				wr.AllowAutoRedirect = true;
-				wr.MaximumAutomaticRedirections = maxAutomaticRedirections;
-			} else {
-				wr.AllowAutoRedirect = false;
-			}
+            if (useCookies) {
+                // It cannot be null or allowAutoRedirect won't work
+                wr.CookieContainer = CookieContainer;
+            }
 
-			wr.AutomaticDecompression = automaticDecompression;
-			wr.PreAuthenticate = preAuthenticate;
+            if (useDefaultCredentials) {
+                wr.UseDefaultCredentials = true;
+            } else {
+                wr.Credentials = credentials;
+            }
 
-			if (useCookies) {
-				// It cannot be null or allowAutoRedirect won't work
-				wr.CookieContainer = CookieContainer;
-			}
+            if (useProxy) {
+                wr.Proxy = proxy;
+            }
 
-			if (useDefaultCredentials) {
-				wr.UseDefaultCredentials = true;
-			} else {
-				wr.Credentials = credentials;
-			}
+            // Add request headers
+            var headers = wr.Headers;
+            foreach (var header in request.Headers) {
+                foreach (var value in header.Value) {
+                    headers.AddValue (header.Key, value);
+                }
+            }
 
-			if (useProxy) {
-				wr.Proxy = proxy;
-			}
+            return wr;
+        }
 
-			// Add request headers
-			AddRequestHeaders(wr, request.Headers);
+        HttpResponseMessage CreateResponseMessage (System.Net.Couchbase.HttpWebResponse wr, HttpRequestMessage requestMessage, CancellationToken cancellationToken)
+        {
+            var response = new HttpResponseMessage (wr.StatusCode);
+            response.RequestMessage = requestMessage;
+            response.ReasonPhrase = wr.StatusDescription;
+            response.Content = new StreamContent (wr.GetResponseStream (), cancellationToken);
 
-			return wr;
-		}
+            var headers = wr.Headers;
+            for (int i = 0; i < headers.Count; ++i) {
+                var key = headers.GetKey(i);
+                var value = headers.GetValues (i);
 
-        HttpResponseMessage CreateResponseMessage(System.Net.Couchbase.HttpWebResponse wr, HttpRequestMessage requestMessage, CancellationToken cancellationToken)
-		{
-			var response = new HttpResponseMessage (wr.StatusCode);
-			response.RequestMessage = requestMessage;
-			response.ReasonPhrase = wr.StatusDescription;
-			response.Content = new StreamContent (wr.GetResponseStream (), cancellationToken);
+                HttpHeaders item_headers;
+                if (HttpHeaders.GetKnownHeaderKind (key) == Headers.HttpHeaderKind.Content)
+                    item_headers = response.Content.Headers;
+                else
+                    item_headers = response.Headers;
 
-			var headers = wr.Headers;
-			for (int i = 0; i < headers.Count; ++i) {
-				var key = headers.GetKey(i);
-				var value = headers.GetValues (i);
+                item_headers.TryAddWithoutValidation (key, value);
+            }
 
-				HttpHeaders item_headers;
-				if (HttpHeaders.GetKnownHeaderKind (key) == Headers.HttpHeaderKind.Content)
-					item_headers = response.Content.Headers;
-				else
-					item_headers = response.Headers;
-					
-				item_headers.TryAddWithoutValidation (key, value);
-			}
+            requestMessage.RequestUri = wr.ResponseUri;
 
-			return response;
-		}
+            return response;
+        }
 
-		protected internal override Task<HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
-		{
-			if (disposed != 0)
-				throw new ObjectDisposedException (GetType ().ToString ());
+        protected async internal override Task<HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            if (disposed != 0)
+                throw new ObjectDisposedException (GetType ().ToString ());
 
-			Interlocked.Exchange(ref sentRequest, 1);
-			_wrequest = CreateWebRequest (request);
+            Thread.MemoryBarrier();
+            sentRequest = true;
+            var wrequest = CreateWebRequest (request);
 
-			Task intermediate;
-			if (request.Content != null) {
-				AddContentHeaders(wrequest, request.Content.Headers);
+            if (request.Content != null) {
+                var headers = wrequest.Headers;
+                foreach (var header in request.Content.Headers) {
+                    foreach (var value in header.Value) {
+                        headers.AddValue (header.Key, value);
+                    }
+                }
 
-				intermediate = wrequest.GetRequestStreamAsync ()
-					.Then (streamTask => request.Content.CopyToAsync (streamTask.Result));
-			} else if (HttpMethod.Post.Equals (request.Method) || HttpMethod.Put.Equals (request.Method) || HttpMethod.Delete.Equals (request.Method)) {
-				// Explicitly set this to make sure we're sending a "Content-Length: 0" header.
-				// This fixes the issue that's been reported on the forums:
-				// http://forums.xamarin.com/discussion/17770/length-required-error-in-http-post-since-latest-release
-				wrequest.ContentLength = 0;
-				intermediate = CompletedTask.Default;
-			} else {
-				intermediate = CompletedTask.Default;
-			}
+                var stream = await wrequest.GetRequestStreamAsync ().ConfigureAwait (false);
+                await request.Content.CopyToAsync (stream).ConfigureAwait (false);
+            } else if (HttpMethod.Post.Equals (request.Method) || HttpMethod.Put.Equals (request.Method) || HttpMethod.Delete.Equals (request.Method)) {
+                // Explicitly set this to make sure we're sending a "Content-Length: 0" header.
+                // This fixes the issue that's been reported on the forums:
+                // http://forums.xamarin.com/discussion/17770/length-required-error-in-http-post-since-latest-release
+                wrequest.ContentLength = 0;
+            }
 
             System.Net.Couchbase.HttpWebResponse wresponse = null;
-			Func<Task<IDisposable>> resource =
-                () => Task.FromResult<IDisposable> (cancellationToken.Register (l => ((System.Net.Couchbase.HttpWebRequest) l).Abort (), wrequest));
-			Func<Task<IDisposable>, Task> body =
-				_ => {
-                    return wrequest.GetResponseAsync().Select(task => wresponse = (System.Net.Couchbase.HttpWebResponse)task.Result)
-                        .Catch<System.Net.Couchbase.WebException>(
-							(task, we) => {
-								if (we.Status == WebExceptionStatus.ProtocolError) {
-									// HttpClient shouldn't throw exceptions for these errors
-                                    wresponse = (System.Net.Couchbase.HttpWebResponse)we.Response;
-								} else if (we.Status != WebExceptionStatus.RequestCanceled) {
-									// propagate the antecedent
-									return task;
-								}
+            using (cancellationToken.Register (l => ((HttpWebRequest) l).Abort (), wrequest)) {
+                try {
+                    wresponse = (System.Net.Couchbase.HttpWebResponse) await wrequest.GetResponseAsync ().ConfigureAwait (false);
+                } catch (WebException we) {
+                    if (we.Status != WebExceptionStatus.RequestCanceled)
+                        throw;
+                }
 
-								return CompletedTask.Default;
-							})
-						.Then (
-							task => {
-								if (cancellationToken.IsCancellationRequested) {
-									return CompletedTask.Canceled<HttpResponseMessage> ();
-								} else {
-									return CompletedTask.Default;
-								}
-							});
-				};
+                if (cancellationToken.IsCancellationRequested) {
+                    var cancelled = new TaskCompletionSource<HttpResponseMessage> ();
+                    cancelled.SetCanceled ();
+                    return await cancelled.Task;
+                }
+            }
 
-			return intermediate
-				.Then (_ => TaskBlocks.Using (resource, body))
-				.Select (_ => CreateResponseMessage (wresponse, request, cancellationToken));
-		}
-
-        private static void AddRequestHeaders(System.Net.Couchbase.HttpWebRequest request, HttpRequestHeaders headers)
-        {
-			foreach (var header in headers) {
-				switch (header.Key.ToLowerInvariant ()) {
-				case "accept":
-					request.Accept = headers.Accept.ToString ();
-					break;
-
-				case "connection":
-					request.Connection = headers.Connection.ToString ();
-					break;
-
-				case "date":
-					// .NET 3.5 does not expose a property for setting this reserved header
-					goto default;
-
-				case "expect":
-					request.Expect = headers.Expect.ToString ();
-					break;
-
-				case "host":
-					// .NET 3.5 does not expose a property for setting this reserved header
-					goto default;
-
-				case "if-modified-since":
-					request.IfModifiedSince = headers.IfModifiedSince.Value.UtcDateTime;
-					break;
-
-				case "range":
-					foreach (var range in headers.Range.Ranges) {
-						checked {
-							if (!string.IsNullOrEmpty(headers.Range.Unit)) {
-								if (range.To.HasValue)
-									request.AddRange (headers.Range.Unit, (int) range.From.Value, (int) range.To.Value);
-								else
-									request.AddRange (headers.Range.Unit, (int) range.From.Value);
-							} else {
-								if (range.To.HasValue)
-									request.AddRange ((int) range.From.Value, (int) range.To.Value);
-								else
-									request.AddRange ((int) range.From.Value);
-							}
-						}
-					}
-
-					break;
-
-				case "referer":
-					request.Referer = headers.Referrer.OriginalString;
-					break;
-
-				case "transfer-encoding":
-					request.TransferEncoding = headers.TransferEncoding.ToString ();
-					break;
-
-				case "user-agent":
-					request.UserAgent = headers.UserAgent.ToString ();
-					break;
-
-				default:
-					foreach (var value in header.Value) {
-						request.Headers.Add (header.Key, value);
-					}
-
-					break;
-				}
-			}
-		}
-
-        private static void AddContentHeaders(System.Net.Couchbase.HttpWebRequest request, HttpContentHeaders headers)
-        {
-			foreach (var header in headers) {
-				switch (header.Key.ToLowerInvariant ()) {
-				case "content-length":
-					request.ContentLength = headers.ContentLength.Value;
-					break;
-
-				case "content-type":
-					request.ContentType = headers.ContentType.ToString ();
-					break;
-
-				default:
-					foreach (var value in header.Value) {
-						request.Headers.Add (header.Key, value);
-					}
-
-					break;
-				}
-			}
-		}
-	}
+            return CreateResponseMessage (wresponse, request, cancellationToken);
+        }
+    }
 }

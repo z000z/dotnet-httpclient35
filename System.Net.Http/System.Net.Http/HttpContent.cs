@@ -2,7 +2,7 @@
 // HttpContent.cs
 //
 // Authors:
-//	Marek Safar  <marek.safar@gmail.com>
+//  Marek Safar  <marek.safar@gmail.com>
 //
 // Copyright (C) 2011 Xamarin Inc (http://www.xamarin.com)
 //
@@ -30,184 +30,184 @@ using System.Net.Http.Headers;
 using System.IO;
 using System.Threading.Tasks;
 using System.Text;
-using Rackspace.Threading;
+using System.Net.Couchbase;
 
 namespace System.Net.Http
 {
-	public abstract class HttpContent : IDisposable
-	{
-		sealed class FixedMemoryStream : MemoryStream
-		{
-			readonly long maxSize;
-			
-			public FixedMemoryStream (long maxSize)
-				: base ()
-			{
-				this.maxSize = maxSize;
-			}
-			
-			void CheckOverflow (int count)
-			{
-				if (Length + count > maxSize)
-					throw new HttpRequestException (string.Format ("Cannot write more bytes to the buffer than the configured maximum buffer size: {0}", maxSize));
-			}
-			
-			public override void WriteByte (byte value)
-			{
-				CheckOverflow (1);
-				base.WriteByte (value);
-			}
-			
-			public override void Write (byte[] buffer, int offset, int count)
-			{
-				CheckOverflow (count);
-				base.Write (buffer, offset, count);
-			}
-		}
-		
-		FixedMemoryStream buffer;
-		Stream stream;
-		bool disposed;
-		HttpContentHeaders headers;
+    public abstract class HttpContent : IDisposable
+    {
+        sealed class FixedMemoryStream : MemoryStream
+        {
+            readonly long maxSize;
 
-		public HttpContentHeaders Headers {
-			get {
-				return headers ?? (headers = new HttpContentHeaders (this));
-			}
-		}
+            public FixedMemoryStream (long maxSize)
+                : base ()
+            {
+                this.maxSize = maxSize;
+            }
 
-		internal long? LoadedBufferLength {
-			get {
-				return buffer == null ? (long?)null : buffer.Length;
-			}
-		}
+            void CheckOverflow (int count)
+            {
+                if (Length + count > maxSize)
+                    throw new HttpRequestException (string.Format ("Cannot write more bytes to the buffer than the configured maximum buffer size: {0}", maxSize));
+            }
 
-		public Task CopyToAsync (Stream stream)
-		{
-			return CopyToAsync (stream, null);
-		}
+            public override void WriteByte (byte value)
+            {
+                CheckOverflow (1);
+                base.WriteByte (value);
+            }
 
-        public Task CopyToAsync(Stream stream, System.Net.Couchbase.TransportContext context)
-		{
-			if (stream == null)
-				throw new ArgumentNullException ("stream");
+            public override void Write (byte[] buffer, int offset, int count)
+            {
+                CheckOverflow (count);
+                base.Write (buffer, offset, count);
+            }
+        }
 
-			if (buffer != null)
-				return buffer.CopyToAsync (stream);
+        FixedMemoryStream buffer;
+        Stream stream;
+        bool disposed;
+        HttpContentHeaders headers;
 
-			return SerializeToStreamAsync (stream, context);
-		}
+        public HttpContentHeaders Headers {
+            get {
+                return headers ?? (headers = new HttpContentHeaders (this));
+            }
+        }
 
-		protected virtual Task<Stream> CreateContentReadStreamAsync ()
-		{
-			return LoadIntoBufferAsync ().Select<Stream> (_ => buffer);
-		}
-		
-		static FixedMemoryStream CreateFixedMemoryStream (long maxBufferSize)
-		{
-			return new FixedMemoryStream (maxBufferSize);
-		}
+        internal long? LoadedBufferLength {
+            get {
+                return buffer == null ? (long?)null : buffer.Length;
+            }
+        }
 
-		public void Dispose ()
-		{
-			Dispose (true);
-		}
-		
-		protected virtual void Dispose (bool disposing)
-		{
-			if (disposing && !disposed) {
-				disposed = true;
+        public Task CopyToAsync (Stream stream)
+        {
+            return CopyToAsync (stream, null);
+        }
 
-				if (buffer != null)
-					buffer.Dispose ();
-			}
-		}
+        public Task CopyToAsync (Stream stream, TransportContext context)
+        {
+            if (stream == null)
+                throw new ArgumentNullException ("stream");
 
-		public Task LoadIntoBufferAsync ()
-		{
-			return LoadIntoBufferAsync (int.MaxValue);
-		}
+            if (buffer != null)
+                return buffer.CopyToAsync (stream);
 
-		public Task LoadIntoBufferAsync (long maxBufferSize)
-		{
-			if (disposed)
-				throw new ObjectDisposedException (GetType ().ToString ());
+            return SerializeToStreamAsync (stream, context);
+        }
 
-			if (buffer != null)
-				return CompletedTask.Default;
+        protected async virtual Task<Stream> CreateContentReadStreamAsync ()
+        {
+            await LoadIntoBufferAsync ().ConfigureAwait (false);
+            return buffer;
+        }
 
-			buffer = CreateFixedMemoryStream (maxBufferSize);
-			return SerializeToStreamAsync (buffer, null)
-				.Select (_ => buffer.Seek (0, SeekOrigin.Begin));
-		}
-		
-		public Task<Stream> ReadAsStreamAsync ()
-		{
-			if (disposed)
-				throw new ObjectDisposedException (GetType ().ToString ());
+        static FixedMemoryStream CreateFixedMemoryStream (long maxBufferSize)
+        {
+            return new FixedMemoryStream (maxBufferSize);
+        }
 
-			if (buffer != null)
-				return Task.FromResult<Stream> (new MemoryStream (buffer.GetBuffer (), 0, (int)buffer.Length, false));
+        public void Dispose ()
+        {
+            Dispose (true);
+        }
 
-			if (stream == null)
-				return CreateContentReadStreamAsync ().Select (task => stream = task.Result);
+        protected virtual void Dispose (bool disposing)
+        {
+            if (disposing && !disposed) {
+                disposed = true;
 
-			return Task.FromResult (stream);
-		}
+                if (buffer != null)
+                    buffer.Dispose ();
+            }
+        }
 
-		public Task<byte[]> ReadAsByteArrayAsync ()
-		{
-			return LoadIntoBufferAsync ().Select (_ => buffer.ToArray ());
-		}
+        public Task LoadIntoBufferAsync ()
+        {
+            return LoadIntoBufferAsync (int.MaxValue);
+        }
 
-		public Task<string> ReadAsStringAsync ()
-		{
-			return LoadIntoBufferAsync ().Select (
-				_ => {
-					if (buffer.Length == 0)
-						return string.Empty;
+        public async Task LoadIntoBufferAsync (long maxBufferSize)
+        {
+            if (disposed)
+                throw new ObjectDisposedException (GetType ().ToString ());
 
-					var buf = buffer.GetBuffer ();
-					var buf_length = (int) buffer.Length;
-					int preambleLength = 0;
-					Encoding encoding;
+            if (buffer != null)
+                return;
 
-					if (headers != null && headers.ContentType != null && headers.ContentType.CharSet != null) {
-						encoding = Encoding.GetEncoding (headers.ContentType.CharSet);
-						preambleLength = StartsWith (buf, buf_length, encoding.GetPreamble ());
-					} else {
-						encoding = GetEncodingFromBuffer (buf, buf_length, ref preambleLength) ?? Encoding.UTF8;
-					}
+            buffer = CreateFixedMemoryStream (maxBufferSize);
+            await SerializeToStreamAsync (buffer, null).ConfigureAwait (false);
+            buffer.Seek (0, SeekOrigin.Begin);
+        }
 
-					return encoding.GetString (buf, preambleLength, buf_length - preambleLength);
-				});
-		}
+        public async Task<Stream> ReadAsStreamAsync ()
+        {
+            if (disposed)
+                throw new ObjectDisposedException (GetType ().ToString ());
 
-		private static Encoding GetEncodingFromBuffer (byte[] buffer, int length, ref int preambleLength)
-		{
-			var encodings_with_preamble = new [] { Encoding.UTF8, Encoding.UTF32, Encoding.Unicode };
-			foreach (var enc in encodings_with_preamble) {
-				if ((preambleLength = StartsWith (buffer, length, enc.GetPreamble ())) > 0)
-					return enc;
-			}
+            if (buffer != null)
+                return new MemoryStream (buffer.GetBuffer (), 0, (int)buffer.Length, false);
 
-			return null;
-		}
+            if (stream == null)
+                stream = await CreateContentReadStreamAsync ().ConfigureAwait (false);
 
-		static int StartsWith (byte[] array, int length, byte[] value)
-		{
-			if (length < value.Length)
-				return 0;
+            return stream;
+        }
 
-			for (int i = 0; i < value.Length; ++i) {
-				if (array [i] != value [i])
-					return 0;
-			}
+        public async Task<byte[]> ReadAsByteArrayAsync ()
+        {
+            await LoadIntoBufferAsync ().ConfigureAwait (false);
+            return buffer.ToArray ();
+        }
 
-			return value.Length;
-		}
+        public async Task<string> ReadAsStringAsync ()
+        {
+            await LoadIntoBufferAsync ().ConfigureAwait (false);
+            if (buffer.Length == 0)
+                return string.Empty;
 
-        protected internal abstract Task SerializeToStreamAsync(Stream stream, System.Net.Couchbase.TransportContext context);
-		protected internal abstract bool TryComputeLength (out long length);
-	}
+            var buf = buffer.GetBuffer ();
+            var buf_length = (int) buffer.Length;
+            int preambleLength = 0;
+            Encoding encoding;
+
+            if (headers != null && headers.ContentType != null && headers.ContentType.CharSet != null) {
+                encoding = Encoding.GetEncoding (headers.ContentType.CharSet);
+                preambleLength = StartsWith (buf, buf_length, encoding.GetPreamble ());
+            } else {
+                encoding = GetEncodingFromBuffer (buf, buf_length, ref preambleLength) ?? Encoding.UTF8;
+            }
+
+            return encoding.GetString (buf, preambleLength, buf_length - preambleLength);
+        }
+
+        internal static Encoding GetEncodingFromBuffer (byte[] buffer, int length, ref int preambleLength)
+        {
+            var encodings_with_preamble = new [] { Encoding.UTF8, Encoding.UTF32, Encoding.Unicode };
+            foreach (var enc in encodings_with_preamble) {
+                if ((preambleLength = StartsWith (buffer, length, enc.GetPreamble ())) > 0)
+                    return enc;
+            }
+
+            return null;
+        }
+
+        static int StartsWith (byte[] array, int length, byte[] value)
+        {
+            if (length < value.Length)
+                return 0;
+
+            for (int i = 0; i < value.Length; ++i) {
+                if (array [i] != value [i])
+                    return 0;
+            }
+
+            return value.Length;
+        }
+
+        protected internal abstract Task SerializeToStreamAsync (Stream stream, TransportContext context);
+        protected internal abstract bool TryComputeLength (out long length);
+    }
 }
