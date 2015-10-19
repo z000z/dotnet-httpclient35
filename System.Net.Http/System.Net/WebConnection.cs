@@ -631,8 +631,8 @@ namespace System.Net.Couchbase
 			X509Certificate client = s.SelectedClientCertificate;
 			X509Certificate server = s.ServerCertificate;
 			#else
-			X509Certificate client = (X509Certificate) piClient.GetValue (stream, null);
-			X509Certificate server = (X509Certificate) piServer.GetValue (stream, null);
+            X509Certificate client = (X509Certificate) piClient.GetGetMethod().Invoke (stream, null);
+            X509Certificate server = (X509Certificate) piServer.GetGetMethod().Invoke (stream, null);
 			#endif
 			sPoint.SetCertificates (client, server);
 			certsAvailable = (server != null);
@@ -1158,7 +1158,7 @@ namespace System.Net.Couchbase
 					HttpsClientStream https = (s as HttpsClientStream);
 					if (https.TrustFailure) {
 						#else
-						if ((bool) piTrustFailure.GetValue (s , null)) {
+                    if ((bool) piTrustFailure.GetGetMethod().Invoke (s , null)) {
 							#endif
 							wes = WebExceptionStatus.TrustFailure;
 							msg = "Trust failure";
